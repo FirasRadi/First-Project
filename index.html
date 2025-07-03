@@ -1,1 +1,544 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مستكشف المعرفة</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* متغيرات السمة الافتراضية (ليلي) */
+      --primary-color: #764ba2;
+      --secondary-color: #667eea;
+      --text-color: #f0f0f0;
+      --card-bg: rgba(255, 255, 255, 0.1);
+      --border-color: rgba(255, 255, 255, 0.3);
+      --body-bg: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+      --shadow-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* السمة النهارية (Light Mode) */
+    html.light-mode {
+      --primary-color: #3b82f6;
+      --secondary-color: #818cf8;
+      --text-color: #1f2937;
+      --card-bg: #ffffff;
+      --border-color: #e5e7eb;
+      --body-bg: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    html { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cairo', 'Poppins', sans-serif;
+      background: var(--body-bg);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+
+    main { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
+
+    .header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 { font-size: 2.5rem; text-shadow: 2px 2px 4px var(--shadow-color); }
+
+    .controls-container { display: flex; gap: 10px; }
+    #theme-switcher, #lang-switcher {
+      background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color);
+      padding: 8px 15px; border-radius: 20px; cursor: pointer; font-family: inherit;
+      font-size: 16px; transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center; min-width: 40px;
+    }
+    #theme-switcher:hover, #lang-switcher:hover {
+      background-color: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+    html.light-mode #theme-switcher, html.light-mode #lang-switcher {
+        background-color: rgba(0,0,0,0.05);
+    }
+    html.light-mode #theme-switcher:hover, html.light-mode #lang-switcher:hover {
+        background-color: rgba(0,0,0,0.1);
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .search-wrapper { position: relative; width: 100%; max-width: 600px; margin-bottom: 10px; }
+    .search-container { display: flex; width: 100%; }
+
+    #queryInput {
+      flex-grow: 1; padding: 15px; font-size: 18px; border: 1px solid var(--border-color);
+      background: var(--card-bg); color: var(--text-color); font-family: inherit; outline: none;
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+    #queryInput::placeholder { color: var(--text-color); opacity: 0.7; }
+    html[dir="ltr"] #queryInput { border-radius: 50px 0 0 50px; }
+    html[dir="rtl"] #queryInput { border-radius: 0 50px 50px 0; }
+
+    #searchButton {
+      padding: 15px 25px; font-size: 18px; background-color: var(--secondary-color);
+      color: white; border: none; cursor: pointer; font-family: inherit; transition: background-color 0.3s ease;
+    }
+    #searchButton:hover { background-color: var(--primary-color); }
+    html[dir="ltr"] #searchButton { border-radius: 0 50px 50px 0; }
+    html[dir="rtl"] #searchButton { border-radius: 50px 0 0 50px; }
+    
+    #feeling-curious-btn { 
+        padding: 12px 25px; font-size: 16px; background-color: var(--secondary-color);
+        color: white; border: none; cursor: pointer; font-family: inherit; transition: all 0.3s ease;
+        border-radius: 50px; margin-top: 10px;
+    }
+    #feeling-curious-btn:hover { background-color: var(--primary-color); transform: scale(1.05); }
+
+    #history-container {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      width: 100%; max-width: 600px; margin: 20px 0;
+      min-height: 20px;
+    }
+    .history-item {
+      background: var(--card-bg); color: var(--text-color);
+      padding: 5px 12px; border-radius: 15px; font-size: 14px;
+      cursor: pointer; transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .history-item:hover { transform: translateY(-2px); border-color: var(--border-color); }
+    html.light-mode .history-item { border: 1px solid var(--border-color); }
+    
+    #suggestions-container {
+        position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg);
+        backdrop-filter: blur(10px); border: 1px solid var(--border-color);
+        border-top: none; border-radius: 0 0 15px 15px; z-index: 1000; overflow: hidden;
+    }
+    #suggestions-container div { padding: 12px 20px; cursor: pointer; transition: background-color 0.2s ease; }
+    #suggestions-container div:hover { background-color: rgba(255, 255, 255, 0.2); }
+    html.light-mode #suggestions-container div:hover { background-color: rgba(0, 0, 0, 0.05); }
+    html[dir="ltr"] #suggestions-container { text-align: left; }
+    html[dir="rtl"] #suggestions-container { text-align: right; }
+
+    #status { font-size: 18px; min-height: 25px; width: 100%; text-align: center; }
+
+    #result-card, .skeleton-loader {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px;
+      width: 100%; box-shadow: 0 8px 32px 0 var(--shadow-color);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      padding: 25px; transition: background 0.5s ease, border-color 0.5s ease;
+    }
+    #result-card { 
+        display: none; opacity: 0; transform: translateY(20px);
+        animation: slideUpFadeIn 0.6s ease-out forwards; 
+    }
+    @keyframes slideUpFadeIn { to { opacity: 1; transform: translateY(0); } }
+    html[dir="ltr"] #result-card, html[dir="ltr"] .skeleton-loader { text-align: left; }
+    html[dir="rtl"] #result-card, html[dir="rtl"] .skeleton-loader { text-align: right; }
+
+    .card-content { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+    .card-text-content { flex: 1; min-width: 250px; }
+    #result-image {
+        width: 120px; height: 120px; border-radius: 15px; object-fit: cover;
+        border: 2px solid var(--border-color); flex-shrink: 0;
+        background-color: var(--card-bg); /* لون خلفية احتياطي */
+    }
+    #summary-text { line-height: 1.8; font-size: 16px; white-space: pre-line; }
+
+    .skeleton-loader { display: none; }
+    .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+        background-size: 200% 100%; animation: skeleton-loading 1.5s infinite linear; border-radius: 5px;
+    }
+    html.light-mode .skeleton {
+        background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
+        background-size: 200% 100%;
+    }
+    @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-header { display: flex; align-items: flex-start; gap: 20px; }
+    .skeleton-img { width: 120px; height: 120px; border-radius: 15px; flex-shrink: 0; }
+    .skeleton-title-block { flex: 1; }
+    .skeleton-title { height: 30px; width: 70%; margin-bottom: 15px; }
+    .skeleton-text { height: 18px; margin-bottom: 10px; }
+    .skeleton-text.w-90 { width: 90%; } .skeleton-text.w-80 { width: 80%; } .skeleton-text.w-50 { width: 50%; }
+    
+    .footer { margin-top: auto; padding-top: 40px; font-size: 14px; opacity: 0.7; }
+    .footer a { color: inherit; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1 data-translate-key="title">🔍 مستكشف المعرفة</h1>
+    <div class="controls-container">
+      <button id="theme-switcher">☀️</button>
+      <button id="lang-switcher" data-translate-key="lang_button"></button>
+    </div>
+  </div>
+
+  <main>
+    <div class="search-wrapper">
+      <div class="search-container">
+        <input type="text" id="queryInput" data-translate-key="placeholder">
+        <button id="searchButton" data-translate-key="search_button"></button>
+      </div>
+      <div id="suggestions-container"></div>
+    </div>
+    
+    <button id="feeling-curious-btn" data-translate-key="curious_btn"></button>
+    <div id="history-container"></div>
+    
+    <p id="status"></p>
+
+    <div class="skeleton-loader" id="skeleton-loader">
+      <div class="skeleton-header">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton-title-block">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-text w-90"></div>
+          <div class="skeleton skeleton-text w-50"></div>
+        </div>
+      </div>
+      <div class="skeleton skeleton-text w-90" style="margin-top: 20px;"></div>
+      <div class="skeleton skeleton-text w-80"></div>
+    </div>
+
+    <div id="result-card">
+      <div class="card-content">
+        <img id="result-image" src="" alt=""> 
+        <div class="card-text-content">
+          <h2 id="result-title"></h2>
+          <p id="quick-facts"></p>
+          <p id="summary-text"></p>
+        </div>
+      </div>
+      <div class="speech-controls" id="speech-controls" style="display: none;">
+          <button id="tts-toggle-btn">▶️</button>
+      </div>
+      <a id="full-article-link" href="#" target="_blank" rel="noopener noreferrer" data-translate-key="full_article_link"></a>
+    </div>
+  </main>
+  
+  <footer class="footer">
+    <a href="https://t.me/Umkulthumadmin_bot" target="_blank" rel="noopener noreferrer" data-translate-key="footer_made_by"></a>
+  </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const CONFIG = {
+        SUGGESTION_DEBOUNCE_MS: 300,
+        MAX_HISTORY_ITEMS: 5,
+        CACHE_EXPIRATION_MS: 60 * 60 * 1000 // 1 hour
+    };
+    
+    const translations = {
+        ar: {
+            title: "🔍 مستكشف المعرفة", lang_button: "English", placeholder: "ابحث عن أي شيء...", search_button: "ابحث",
+            status_error: "⚠️ حدث خطأ. الرجاء المحاولة مرة أخرى.", status_not_found: "❌ لم أجد شيئًا. هل يمكنك التأكد من الاسم؟",
+            full_article_link: "اقرأ المقال الكامل", disambiguation_title: "وجدنا عدة نتائج. أي واحدة تقصد؟",
+            footer_made_by: "صُنع بواسطة راضي", curious_btn: "✨ أشعر بالفضول"
+        },
+        en: {
+            title: "🔍 Knowledge Explorer", lang_button: "العربية", placeholder: "Search for anything...", search_button: "Explore",
+            status_error: "⚠️ An error occurred. Please try again.", status_not_found: "❌ Couldn't find anything. Can you check the name?",
+            full_article_link: "Read Full Article", disambiguation_title: "Found multiple results. Which one do you mean?",
+            footer_made_by: "Made by Radi", curious_btn: "✨ I'm Feeling Curious"
+        }
+    };
+
+    let currentLang = 'ar';
+    let suggestionTimeout;
+    let currentTheme = localStorage.getItem('theme') || 'dark';
+    let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+
+    const queryInput = document.getElementById('queryInput');
+    const statusDiv = document.getElementById('status');
+    const resultCard = document.getElementById('result-card');
+    const skeletonLoader = document.getElementById('skeleton-loader');
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const themeSwitcher = document.getElementById('theme-switcher');
+    const historyContainer = document.getElementById('history-container');
+    const speechControls = document.getElementById('speech-controls');
+    const ttsToggleBtn = document.getElementById('tts-toggle-btn');
+    const synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+    
+    async function fetchWithCache(key, fetcher) {
+        try {
+            const cachedItem = localStorage.getItem(key);
+            if (cachedItem) {
+                const { timestamp, data } = JSON.parse(cachedItem);
+                if (Date.now() - timestamp < CONFIG.CACHE_EXPIRATION_MS) {
+                    return data;
+                } else {
+                    localStorage.removeItem(key);
+                }
+            }
+        } catch(e) { /* Ignore parsing errors, will re-fetch */ }
+        
+        const data = await fetcher();
+        if (data) {
+            try {
+                const itemToCache = { timestamp: Date.now(), data };
+                localStorage.setItem(key, JSON.stringify(itemToCache));
+            } catch(e) { console.warn("Could not write to localStorage, cache is likely full."); }
+        }
+        return data;
+    }
+    
+    async function explore(queryOverride) {
+        const query = (queryOverride || queryInput.value.trim()).replace(/_/g, ' ');
+        if (!query) return;
+
+        showLoader(true);
+        addToHistory(query);
+
+        try {
+            const cacheKey = `wiki_${currentLang}_${query}`;
+            let data = await fetchWithCache(cacheKey, () => fetchFromWikipedia(query, currentLang));
+            
+            if (!data || (data.type === 'disambiguation' && !data.extract)) {
+                const fallbackLang = currentLang === 'ar' ? 'en' : 'ar';
+                const fallbackCacheKey = `wiki_${fallbackLang}_${query}`;
+                data = await fetchWithCache(fallbackCacheKey, () => fetchFromWikipedia(query, fallbackLang));
+            }
+
+            showLoader(false);
+
+            if (data && data.extract) {
+                if (data.type === 'disambiguation' && data.extract_html) {
+                    handleDisambiguation(data);
+                } else {
+                    displayResult(data);
+                }
+            } else {
+                statusDiv.innerText = translations[currentLang].status_not_found;
+            }
+        } catch (error) {
+            console.error("Explore function error:", error);
+            showLoader(false);
+            statusDiv.innerText = translations[currentLang].status_error;
+        }
+    }
+    
+    async function exploreRandom() {
+        showLoader(true);
+        try {
+            const url = `https://${currentLang}.wikipedia.org/api/rest_v1/page/random/summary`;
+            const response = await fetch(url, { headers: { 'Accept': 'application/json; charset=utf-8' }});
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            showLoader(false);
+            displayResult(data);
+            addToHistory(data.title);
+        } catch (error) {
+            console.error("Random fetch error:", error);
+            showLoader(false);
+            statusDiv.innerText = translations[currentLang].status_error;
+        }
+    }
+
+    async function fetchFromWikipedia(query, lang) {
+        const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+        try {
+            const response = await fetch(url, { headers: { 'Accept': 'application/json; charset=utf-8' }});
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (error) {
+            console.error(`Failed to fetch from ${lang} Wikipedia:`, error);
+            return null;
+        }
+    }
+    
+    async function fetchSuggestions() {
+        const query = queryInput.value.trim();
+        if (query.length < 2) {
+            suggestionsContainer.innerHTML = '';
+            return;
+        }
+        const url = `https://${currentLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const suggestions = data[1];
+            suggestionsContainer.innerHTML = '';
+            if (suggestions) {
+                suggestions.forEach(suggestion => {
+                    const div = document.createElement('div');
+                    div.textContent = suggestion;
+                    div.onclick = () => {
+                        queryInput.value = suggestion;
+                        suggestionsContainer.innerHTML = '';
+                        explore();
+                    };
+                    suggestionsContainer.appendChild(div);
+                });
+            }
+        } catch (error) { console.error('Suggestion fetch error:', error); }
+    }
+
+    function displayResult(data) {
+        statusDiv.innerHTML = '';
+        resultCard.style.display = 'none';
+        resultCard.style.opacity = '0';
+        resultCard.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            document.getElementById('result-title').innerText = data.title;
+            document.getElementById('summary-text').innerText = data.extract;
+            const firstSentence = data.extract.split(/[.!?؟]/)[0];
+            document.getElementById('quick-facts').innerText = `💡 ${firstSentence}.`;
+            const resultImage = document.getElementById('result-image');
+            resultImage.src = data.thumbnail ? data.thumbnail.source : `https://via.placeholder.com/120?text=${data.lang.toUpperCase()}`;
+            resultImage.alt = data.title;
+            resultImage.onerror = () => {
+                resultImage.onerror = null;
+                resultImage.src = `https://via.placeholder.com/120?text=${data.lang.toUpperCase()}`;
+            };
+            document.getElementById('full-article-link').href = data.content_urls.desktop.page;
+            resultCard.style.display = 'block';
+            if (synth) speak(data.extract, data.lang);
+        }, 50);
+    }
+    
+    function handleDisambiguation(data) {
+        statusDiv.innerHTML = `<strong>${translations[currentLang].disambiguation_title}</strong>`;
+        const fragment = document.createDocumentFragment();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.extract_html, 'text/html');
+        
+        doc.querySelectorAll('a').forEach(link => {
+            const title = link.getAttribute('title');
+            if (title) {
+                const linkDiv = document.createElement('div');
+                linkDiv.className = 'disambiguation-link';
+                linkDiv.textContent = title;
+                linkDiv.style.cursor = 'pointer';
+                linkDiv.onclick = () => explore(title);
+                fragment.appendChild(linkDiv);
+            }
+        });
+        if (fragment.hasChildNodes()) {
+            statusDiv.appendChild(fragment);
+        } else {
+            statusDiv.innerText = translations[currentLang].status_not_found;
+        }
+    }
+
+    function addToHistory(query) {
+        const cleanQuery = query.trim();
+        if (!cleanQuery) return;
+        searchHistory = searchHistory.filter(item => item.toLowerCase() !== cleanQuery.toLowerCase());
+        searchHistory.unshift(cleanQuery);
+        searchHistory = searchHistory.slice(0, CONFIG.MAX_HISTORY_ITEMS);
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        historyContainer.innerHTML = '';
+        searchHistory.forEach(item => {
+            const historyItem = document.createElement('button');
+            historyItem.className = 'history-item';
+            historyItem.textContent = item;
+            historyItem.onclick = () => {
+                queryInput.value = item;
+                explore();
+            };
+            historyContainer.appendChild(historyItem);
+        });
+    }
+
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.classList.add('light-mode');
+            themeSwitcher.textContent = '🌙';
+        } else {
+            document.documentElement.classList.remove('light-mode');
+            themeSwitcher.textContent = '☀️';
+        }
+        localStorage.setItem('theme', theme);
+        currentTheme = theme;
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.getAttribute('data-translate-key');
+            if (translations[lang][key]) {
+                if (el.tagName === 'INPUT') el.placeholder = translations[lang][key];
+                else el.innerText = translations[lang][key];
+            }
+        });
+    }
+
+    function showLoader(show) {
+        skeletonLoader.style.display = show ? 'block' : 'none';
+        if (show) {
+            statusDiv.innerHTML = '';
+            resultCard.style.display = 'none';
+            resultCard.style.opacity = '0';
+            suggestionsContainer.innerHTML = '';
+            if (synth) synth.cancel();
+            speechControls.style.display = 'none';
+        }
+    }
+    
+    function speak(text, lang) {
+        if (!synth) return;
+        synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
+        utterance.onstart = () => { speechControls.style.display = 'flex'; ttsToggleBtn.innerHTML = '⏸️'; };
+        utterance.onpause = () => { ttsToggleBtn.innerHTML = '▶️'; };
+        utterance.onresume = () => { ttsToggleBtn.innerHTML = '⏸️'; };
+        utterance.onend = () => { speechControls.style.display = 'none'; ttsToggleBtn.innerHTML = '▶️'; };
+        utterance.onerror = (e) => { console.error('SpeechSynthesis Error:', e.error); speechControls.style.display = 'none'; };
+        synth.speak(utterance);
+    }
+    
+    function initialize() {
+        setLanguage(currentLang);
+        applyTheme(currentTheme);
+        renderHistory();
+
+        document.getElementById('searchButton').addEventListener('click', () => explore());
+        document.getElementById('lang-switcher').addEventListener('click', () => setLanguage(currentLang === 'ar' ? 'en' : 'ar'));
+        document.getElementById('feeling-curious-btn').addEventListener('click', exploreRandom);
+        themeSwitcher.addEventListener('click', () => applyTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+
+        queryInput.addEventListener("keyup", e => { if (e.key === "Enter") explore(); });
+        queryInput.addEventListener('input', () => {
+            clearTimeout(suggestionTimeout);
+            suggestionTimeout = setTimeout(fetchSuggestions, CONFIG.SUGGESTION_DEBOUNCE_MS);
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-wrapper')) { suggestionsContainer.innerHTML = ''; }
+        });
+        
+        if (synth) {
+            ttsToggleBtn.addEventListener('click', () => {
+                if (synth.speaking && !synth.paused) synth.pause();
+                else if (synth.paused) synth.resume();
+            });
+        }
+    }
+
+    initialize();
+});
+</script>
+
+</body>
+</html>
